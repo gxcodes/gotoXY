@@ -1,0 +1,96 @@
+<!-- 
+  Proof of Concept
+  Go To Coordinate
+  Angga G. Pratama
+  a.pratama@forestcarbon.com
+ -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>XY Input</title>
+    <link rel="stylesheet" href="http://openlayers.org/en/v3.18.2/css/ol.css" type="text/css">
+    <!-- The line below is only needed for old environments like Internet Explorer and Android 4.x -->
+    <script src="http://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL"></script>
+    <script src="http://openlayers.org/en/v3.18.2/build/ol.js"></script>
+
+    <style>
+      #marker {
+        width: 10px;
+        height: 10px;
+        border: 1px solid #088;
+        border-radius: 5px;
+        background-color: #0FF;
+        opacity: 0.75;
+      }
+    </style>
+  </head>
+  <body>
+
+    <input id="xylocation" type="text" placeholder="Enter Coordinate - Lon, Lat"
+       onkeydown = "if (event.keyCode == 13)
+                        document.getElementById('pan-to-xy').click()" 
+    >
+    <button id="pan-to-xy">Go to Coordinate</button><br><br>
+
+    <div id="map" class="map"></div>
+
+    <div style="display: none;">
+      <div id="marker" title="Marker"></div>
+    </div>
+
+    <script>
+
+      var indonesia = ol.proj.fromLonLat([118, -0.7]);
+
+      var view = new ol.View({
+        // the view's initial state
+        center: indonesia,
+        zoom: 4
+      });
+
+      var map = new ol.Map({
+        layers: [
+          new ol.layer.Tile({
+            preload: 4,
+            source: new ol.source.OSM()
+          })
+        ],
+        // Improve user experience by loading tiles while animating. Will make
+        // animations stutter on mobile or slow devices.
+        loadTilesWhileAnimating: true,
+        target: 'map',
+        controls: ol.control.defaults({
+          attributionOptions: /** @type {olx.control.AttributionOptions} */ ({
+            collapsible: false
+          })
+        }),
+        view: view
+      });
+
+      var panToXY = document.getElementById('pan-to-xy');
+      panToXY.addEventListener('click', function() {
+        var pan = ol.animation.pan({
+          duration: 800,
+          source: /** @type {ol.Coordinate} */ (view.getCenter())
+        });
+
+        var elemxy = document.getElementById("xylocation");
+        var xyarr = elemxy.value.split(/[ ,]+/).map(Number);
+        var xylocation = ol.proj.fromLonLat(xyarr);
+
+        map.addOverlay(
+          new ol.Overlay({
+            position: xylocation,
+            positioning: 'center-center',
+            element: document.getElementById('marker'),
+            stopEvent: false
+          })
+          );
+        map.beforeRender(pan);
+        view.setCenter(xylocation);
+      }, false);
+
+    </script>
+  </body>
+</html>
